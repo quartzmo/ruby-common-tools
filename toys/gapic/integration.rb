@@ -154,3 +154,43 @@ expand :minitest do |t|
   t.use_bundler
   t.files = "acceptance/**/*smoke_test.rb"
 end
+
+require_relative "junit_helper"
+
+# Reopen the internal "_acceptance" integration test runner to inject JUnit XML test
+# formatting (generating reports at tmp/reports/sponge_log.xml).
+tool "_acceptance" do
+  include GapicJunitHelper
+
+  alias_method :original_bundler_setup, :bundler_setup
+  alias_method :original_run, :run
+
+  def bundler_setup gemfile_path: nil
+    original_bundler_setup gemfile_path: setup_junit_wrapper(gemfile_path: gemfile_path)
+  end
+
+  def run
+    original_run
+  ensure
+    cleanup_junit_wrapper
+  end
+end
+
+# Reopen the internal "_smoke" integration test runner to inject JUnit XML test
+# formatting (generating reports at tmp/reports/sponge_log.xml).
+tool "_smoke" do
+  include GapicJunitHelper
+
+  alias_method :original_bundler_setup, :bundler_setup
+  alias_method :original_run, :run
+
+  def bundler_setup gemfile_path: nil
+    original_bundler_setup gemfile_path: setup_junit_wrapper(gemfile_path: gemfile_path)
+  end
+
+  def run
+    original_run
+  ensure
+    cleanup_junit_wrapper
+  end
+end
